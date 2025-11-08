@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react'
 import './Quiz.css'
-import QuizQuestion from '../core/QuizQuestion';
 import QuizCore from '../core/QuizCore';
 
 const Quiz: React.FC = () => {
@@ -10,15 +9,33 @@ const Quiz: React.FC = () => {
   
   // Only track UI state (selected answer) - QuizCore handles the rest
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  // Task 3: Counter to force re-render when moving to next question
+  const [questionCounter, setQuestionCounter] = useState(0);
 
   const handleOptionSelect = (option: string): void => {
     setSelectedAnswer(option);
   }
 
-
   const handleButtonClick = (): void => {
-    // TODO: Task3 - Implement the logic for button click ("Next Question" and "Submit").
-    // Hint: You might want to check for a function in the core logic to help with this.
+    // Task 3: Record the answer if one was selected
+    if (selectedAnswer) {
+      quizCore.answerQuestion(selectedAnswer);
+    }
+    
+    // Check if there's a next question
+    if (quizCore.hasNextQuestion()) {
+      // Move to next question
+      quizCore.nextQuestion();
+      // Reset selection for next question
+      setSelectedAnswer(null);
+      // Increment counter to force re-render
+      setQuestionCounter(prev => prev + 1);
+    } else {
+      // Last question - move past it to show completion screen
+      quizCore.nextQuestion();
+      setSelectedAnswer(null);
+      setQuestionCounter(prev => prev + 1);
+    }
   } 
 
   // Get current question from QuizCore instead of state
@@ -42,7 +59,7 @@ const Quiz: React.FC = () => {
       <ul>
         {currentQuestion.options.map((option) => (
           <li
-            key={option}
+            key={`${option}-${questionCounter}`}
             onClick={() => handleOptionSelect(option)}
             className={selectedAnswer === option ? 'selected' : ''}
           >
@@ -51,10 +68,9 @@ const Quiz: React.FC = () => {
         ))}
       </ul>
 
-      <h3>Selected Answer:</h3>
-      <p>{selectedAnswer ?? 'No answer selected'}</p>
-
-      <button onClick={handleButtonClick}>Next Question</button>
+      <button onClick={handleButtonClick}>
+        {quizCore.hasNextQuestion() ? 'Next Question' : 'Submit'}
+      </button>
     </div>
   );
 };
