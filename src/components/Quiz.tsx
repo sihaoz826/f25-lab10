@@ -1,34 +1,18 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import './Quiz.css'
 import QuizQuestion from '../core/QuizQuestion';
-// Hint: Take advantage of the QuizQuestion interface
-
-interface QuizState {
-  questions: QuizQuestion[]
-  currentQuestionIndex: number
-  selectedAnswer: string | null
-  score: number
-}
+import QuizCore from '../core/QuizCore';
 
 const Quiz: React.FC = () => {
-  // TODO: Task1 - Seprate the logic of quiz from the UI.
-  // Hint: Take advantage of QuizCore to manage quiz state separately from the UI.
-  const initialQuestions: QuizQuestion[] = [
-    {
-      question: 'What is the capital of France?',
-      options: ['London', 'Berlin', 'Paris', 'Madrid'],
-      correctAnswer: 'Paris',
-    },
-  ];
-  const [state, setState] = useState<QuizState>({
-    questions: initialQuestions,
-    currentQuestionIndex: 0,  // Initialize the current question index.
-    selectedAnswer: null,  // Initialize the selected answer.
-    score: 0,  // Initialize the score.
-  });
+  // Task 1: Use QuizCore to manage quiz state separately from the UI
+  const quizCoreRef = useRef<QuizCore>(new QuizCore());
+  const quizCore = quizCoreRef.current;
+  
+  // Only track UI state (selected answer) - QuizCore handles the rest
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 
   const handleOptionSelect = (option: string): void => {
-    setState((prevState) => ({ ...prevState, selectedAnswer: option }));
+    setSelectedAnswer(option);
   }
 
 
@@ -37,14 +21,14 @@ const Quiz: React.FC = () => {
     // Hint: You might want to check for a function in the core logic to help with this.
   } 
 
-  const { questions, currentQuestionIndex, selectedAnswer, score } = state;
-  const currentQuestion = questions[currentQuestionIndex];
+  // Get current question from QuizCore instead of state
+  const currentQuestion = quizCore.getCurrentQuestion();
 
   if (!currentQuestion) {
     return (
       <div>
         <h2>Quiz Completed</h2>
-        <p>Final Score: {score} out of {questions.length}</p>
+        <p>Final Score: {quizCore.getScore()} out of {quizCore.getTotalQuestions()}</p>
       </div>
     );
   }
